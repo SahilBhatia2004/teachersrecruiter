@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, Users, Search, Eye, ExternalLink } from 'lucide-react';
+import { LogOut, Users, Search, Eye } from 'lucide-react';
 
 interface TeacherProfile {
   id: string;
@@ -148,15 +148,14 @@ const RecruiterDashboard = () => {
           </div>
           
           {teacher.resume_link && (
-            <div>
-              <Label className="font-medium">Resume</Label>
-              <div className="mt-1">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={teacher.resume_link} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-4 w-4 mr-1" />
-                    View Resume
-                  </a>
-                </Button>
+            <div className="space-y-2">
+              <Label className="font-medium">Resume (PDF)</Label>
+              <div className="rounded-md border">
+                <iframe
+                  title="Resume PDF"
+                  src={teacher.resume_link}
+                  className="h-[500px] w-full rounded-md"
+                />
               </div>
             </div>
           )}
@@ -167,8 +166,8 @@ const RecruiterDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center space-x-4">
             <Users className="h-8 w-8 text-primary" />
             <div>
@@ -185,7 +184,7 @@ const RecruiterDashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">
-          <Card>
+          <Card className="rounded-2xl shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Search className="mr-2 h-5 w-5" />
@@ -238,7 +237,7 @@ const RecruiterDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-2xl shadow-sm">
             <CardHeader>
               <CardTitle>Teachers ({filteredTeachers.length})</CardTitle>
             </CardHeader>

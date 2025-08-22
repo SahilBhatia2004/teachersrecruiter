@@ -37,6 +37,7 @@ const TeacherDashboard = () => {
     resume_link: ''
   });
   const [skillsInput, setSkillsInput] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -73,13 +74,46 @@ const TeacherDashboard = () => {
 
     try {
       const skills = skillsInput.split(',').map(skill => skill.trim()).filter(Boolean);
-      
+      let resumeUrl = teacherProfile.resume_link;
+
+      if (resumeFile) {
+        if (resumeFile.type !== 'application/pdf') {
+          throw new Error('Please upload a PDF file');
+        }
+        if (resumeFile.size > 10 * 1024 * 1024) {
+          throw new Error('File size must be under 10MB');
+        }
+
+        const fileExt = resumeFile.name.split('.').pop();
+        const filePath = `${user!.id}/resume-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase
+          .storage
+          .from('resumes')
+          .upload(filePath, resumeFile, {
+            contentType: 'application/pdf',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: publicData } = supabase
+          .storage
+          .from('resumes')
+          .getPublicUrl(filePath);
+
+        resumeUrl = publicData.publicUrl;
+      }
+
       const { error } = await supabase
         .from('teacher_profiles')
         .upsert({
           user_id: user!.id,
           ...teacherProfile,
-          skills
+          skills,
+          resume_link: resumeUrl
         });
 
       if (error) throw error;
@@ -101,8 +135,8 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center space-x-4">
             <User className="h-8 w-8 text-primary" />
             <div>
@@ -118,7 +152,7 @@ const TeacherDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Card>
+        <Card className="rounded-2xl shadow-sm">
           <CardHeader>
             <CardTitle>Your Teacher Profile</CardTitle>
             <CardDescription>
@@ -127,7 +161,7 @@ const TeacherDashboard = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input
@@ -147,7 +181,7 @@ const TeacherDashboard = () => {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="subject">Subject/Role</Label>
                   <Input
@@ -200,14 +234,18 @@ const TeacherDashboard = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="resume_link">Resume Link</Label>
+                <Label htmlFor="resume_pdf">Resume (PDF)</Label>
                 <Input
-                  id="resume_link"
-                  type="url"
-                  placeholder="https://example.com/resume.pdf"
-                  value={teacherProfile.resume_link}
-                  onChange={(e) => setTeacherProfile(prev => ({ ...prev, resume_link: e.target.value }))}
+                  id="resume_pdf"
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
                 />
+                {teacherProfile.resume_link && (
+                  <p className="text-sm text-muted-foreground">
+                    Current: <a className="underline" href={teacherProfile.resume_link} target="_blank" rel="noreferrer">View uploaded resume</a>
+                  </p>
+                )}
               </div>
 
               <Button type="submit" disabled={loading} className="w-full">
