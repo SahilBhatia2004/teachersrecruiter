@@ -42,7 +42,7 @@ const Auth = () => {
     if (user && profile) {
       if (profile.role === 'teacher') {
         navigate('/teacher/dashboard');
-      } else {
+      } else if (profile.role === 'recruiter') {
         navigate('/recruiter/dashboard');
       }
     }
@@ -105,6 +105,11 @@ const Auth = () => {
               await supabase
                 .from('profiles')
                 .update({ role: 'teacher' })
+                .eq('user_id', data.user.id);
+            } else if (role === 'recruiter' && existingProfile.role !== 'recruiter') {
+              await supabase
+                .from('profiles')
+                .update({ role: 'recruiter' })
                 .eq('user_id', data.user.id);
             }
           } catch (e) {

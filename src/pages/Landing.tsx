@@ -95,7 +95,7 @@ const Landing = () => {
             <Button variant="ghost" onClick={() => navigate('/auth?role=recruiter')}>Browse All</Button>
           </div>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
-            {["PGT English (2–5 yrs)", "TGT Maths (3–7 yrs)", "Primary Teacher (1–3 yrs)"].map((title, i) => (
+            {["English professor (2–5 yrs)", "Maths professor (3–7 yrs)", "Primary Teacher (1–3 yrs)"].map((title, i) => (
               <Card key={i} className="hover:shadow-md">
                 <CardHeader>
                   <CardTitle className="text-base">{title}</CardTitle>
